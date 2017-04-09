@@ -43,6 +43,10 @@ int main(int argc, char* argv[])
     // Test Vector 003
     byte key[32];
     memset( key, 0, sizeof(key) );
+
+    byte test_key[4];
+    memset( test_key, 0xf0, sizeof(test_key) );
+
     byte iv[12];
     memset( iv, 0, sizeof(iv) );
 
@@ -62,14 +66,60 @@ int main(int argc, char* argv[])
 
     try
     {
+        printf("\n");
+        printf("************************************************************\n");
+        printf("********************  ENCRYPTION START  ********************\n");
+        printf("\n");
+
         GCM< AES >::Encryption e;
         e.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
         // Not required for GCM mode (but required for CCM mode)
         // e.SpecifyDataLengths( adata.size(), pdata.size(), 0 );
+        
+        printf("key:");
+        for(int i=0; i<sizeof(key); i++){
+            if(i%10 == 0)
+                printf("\n");
+            printf(" 0x%02x ", (unsigned)key[i]);
+        }
+        printf("\n");
+        printf("\n");
+
+        printf("iv:");
+        for(int i=0; i<sizeof(iv); i++){
+            if(i%10 == 0)
+                printf("\n");
+            printf(" 0x%02x ", (unsigned)iv[i]);
+        }
+        printf("\n");
+        printf("\n");
 
         AuthenticatedEncryptionFilter ef( e,
             new StringSink( cipher ), false, TAG_SIZE
         ); // AuthenticatedEncryptionFilter
+
+
+        StringSource( cipher, true,
+            new HexEncoder( new StringSink( encoded ), true, 16, " " ) );
+
+        printf("encoded:");
+        for(int i=0; i<sizeof(encoded); i++){
+            if(i%10 == 0)
+                printf("\n");
+            printf(" 0x%02x ", encoded[i]);
+        }
+        printf("\n");
+        printf("\n");
+
+        //printf("cipher:");
+        //for(int i=0; i<sizeof(cipher); i++){
+        //    if(i%10 == 0)
+        //        printf("\n");
+        //    printf(" 0x%02x ", (unsigned)cipher[i]);
+        //}
+        //printf("\n");
+        //printf("\n");
+
 
         // AuthenticatedEncryptionFilter::ChannelPut
         //  defines two channels: "" (empty) and "AAD"
@@ -78,15 +128,28 @@ int main(int argc, char* argv[])
         ef.ChannelPut( "AAD", (const byte*)adata.data(), adata.size() );
         ef.ChannelMessageEnd("AAD");
 
+        //printf("adata: %x\n", adata);
+
         // Authenticated data *must* be pushed before
         //  Confidential/Authenticated data. Otherwise
         //  we must catch the BadState exception
         ef.ChannelPut( "", (const byte*)pdata.data(), pdata.size() );
         ef.ChannelMessageEnd("");
 
+        //printf("pdata: %x\n", pdata);
+
         // Pretty print
         StringSource( cipher, true,
             new HexEncoder( new StringSink( encoded ), true, 16, " " ) );
+
+        printf("encoded:");
+        for(int i=0; i<sizeof(encoded); i++){
+            if(i%10 == 0)
+                printf("\n");
+            printf(" 0x%02x ", encoded[i]);
+        }
+        printf("\n");
+        printf("\n");
     }
     catch( CryptoPP::BufferedTransformation::NoChannelSupport& e )
     {
