@@ -33,6 +33,8 @@ using CryptoPP::GCM_TablesOption;
 
 int main(int argc, char* argv[])
 {
+    // For test case 14, remove all adata calls
+    //
     //KEY 0000000000000000000000000000000000000000000000000000000000000000
     //IV  000000000000000000000000
     //HDR 00000000000000000000000000000000
@@ -40,14 +42,77 @@ int main(int argc, char* argv[])
     //CTX cea7403d4d606b6e074ec5d3baf39d18
     //TAG ae9b1771dba9cf62b39be017940330b4
 
+    byte key_startState[32] = {0xfe, 0xff, 0xe9, 0x92, 0x86, 0x65, 0x73, 0x1c, 
+                               0x6d, 0x6a, 0x8f, 0x94, 0x67, 0x30, 0x83, 0x08,
+                               0xfe, 0xff, 0xe9, 0x92, 0x86, 0x65, 0x73, 0x1c, 
+                               0x6d, 0x6a, 0x8f, 0x94, 0x67, 0x30, 0x83, 0x08};
+
+    byte iv_startState[12] = {0xca, 0xfe, 0xba, 0xbe, 0xfa, 0xce, 
+                              0xdb, 0xad, 0xde, 0xca, 0xf8, 0x88};
+
+    string adata = {
+                (char)0xfe, (char)0xed, (char)0xfa, (char)0xce, (char)0xde, (char)0xad, 
+                (char)0xbe, (char)0xef, (char)0xfe, (char)0xed, (char)0xfa, (char)0xce, 
+                (char)0xde, (char)0xad, (char)0xbe, (char)0xef, (char)0xab, (char)0xad, 
+                (char)0xda, (char)0xd2
+                   };
+
+    string pdata = {
+                (char)0xd9, (char)0x31, (char)0x32, (char)0x25, (char)0xf8, (char)0x84, 
+                (char)0x06, (char)0xe5, (char)0xa5, (char)0x59, (char)0x09, (char)0xc5, 
+                (char)0xaf, (char)0xf5, (char)0x26, (char)0x9a, (char)0x86, (char)0xa7, 
+                (char)0xa9, (char)0x53, (char)0x15, (char)0x34, (char)0xf7, (char)0xda, 
+                (char)0x2e, (char)0x4c, (char)0x30, (char)0x3d, (char)0x8a, (char)0x31, 
+                (char)0x8a, (char)0x72, (char)0x1c, (char)0x3c, (char)0x0c, (char)0x95, 
+                (char)0x95, (char)0x68, (char)0x09, (char)0x53, (char)0x2f, (char)0xcf, 
+                (char)0x0e, (char)0x24, (char)0x49, (char)0xa6, (char)0xb5, (char)0x25, 
+                (char)0xb1, (char)0x6a, (char)0xed, (char)0xf5, (char)0xaa, (char)0x0d, 
+                (char)0xe6, (char)0x57, (char)0xba, (char)0x63, (char)0x7b, (char)0x39
+                   }; 
+
+/*
+test case 16:
+
+K= 
+feffe9928665731c6d6a8f9467308308
+feffe9928665731c6d6a8f9467308308 
+ 
+IV=
+cafebabefacedbaddecaf888
+
+A=
+feedfacedeadbeeffeedfacedeadbeef
+abaddad2
+
+P=
+d9313225f88406e5a55909c5aff5269a
+86a7a9531534f7da2e4c303d8a318a72
+1c3c0c95956809532fcf0e2449a6b525
+b16aedf5aa0de657ba637b39
+
+C=
+522dc1f099567d07f47f37a32a84427d
+643a8cdcbfe5c0c97598a2bd2555d1aa
+8cb08e48590dbb3da7b08b1056828838
+c5f61e6393ba7a0abcc9f662
+
+T=
+76fc6ece0f4e1768cddf8853bb2d551b
+*/
+
+
+
     // Test Vector 003
     byte key[32];
-    memset( key, 0, sizeof(key) );
-    byte iv[12];
-    memset( iv, 0, sizeof(iv) );
+    //memset( key, 0, sizeof(key) );
+    memcpy(key, key_startState, sizeof(key));
 
-    string adata( 16, (char)0x00 );
-    string pdata( 16, (char)0x00 );
+    byte iv[12];
+    //memset( iv, 0, sizeof(iv) );
+    memcpy(iv, iv_startState, sizeof(iv));
+
+    //string adata( 16, (char)0x00 );
+    //string pdata( 16, (char)0x00 );
 
     const int TAG_SIZE = 16;
 
@@ -64,8 +129,6 @@ int main(int argc, char* argv[])
     {
         GCM< AES >::Encryption e;
         e.SetKeyWithIV( key, sizeof(key), iv, sizeof(iv) );
-        // Not required for GCM mode (but required for CCM mode)
-        // e.SpecifyDataLengths( adata.size(), pdata.size(), 0 );
 
         AuthenticatedEncryptionFilter ef( e,
             new StringSink( cipher ), false, TAG_SIZE

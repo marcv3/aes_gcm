@@ -3,7 +3,17 @@ example1:
 	# arg1: number of columns when printing bytes
 	./aesgcm_exOutput 10
 
-
 example2:
 	g++ -g3 -ggdb -O0 -Wall -Wextra -Wno-unused -o AdataOutput Driver.cpp stdafx.cpp -lcryptopp
 	./AdataOutput
+
+
+compile:
+	g++ -std=c++11 -g3 -ggdb -O0 -Wall -Wextra -Wno-unused -o AdataOutput Driver.cpp stdafx.cpp -lcryptopp
+
+run:
+	./AdataOutput
+
+all: compile run
+
+
